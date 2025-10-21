@@ -34,7 +34,13 @@ export function NewsFeed({
     async function fetchNews() {
       try {
         setLoading(true)
-        const response = await fetch(`/api/news?t=${Date.now()}`)
+
+        // 검색어가 있으면 검색 API 사용, 없으면 전체 뉴스 API 사용
+        const url = searchQuery.trim()
+          ? `/api/search?q=${encodeURIComponent(searchQuery)}&region=${activeRegion}&t=${Date.now()}`
+          : `/api/news?t=${Date.now()}`
+
+        const response = await fetch(url)
         if (!response.ok) {
           throw new Error("Failed to fetch news")
         }
@@ -48,27 +54,32 @@ export function NewsFeed({
     }
 
     fetchNews()
-  }, [refreshTrigger])
+  }, [refreshTrigger, searchQuery, activeRegion])
 
   const filteredArticles = articles.filter((article) => {
-    // Filter by category
-    const matchesCategory = activeCategory === "all" || article.category === activeCategory
+    // 검색 모드일 때는 카테고리 필터만 무시 (지역 필터는 API에서 처리됨)
+    const isSearchMode = searchQuery.trim().length > 0
 
-    // Filter by search query (case-insensitive search in title, description, and source)
-    const matchesSearch =
-      !searchQuery ||
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.source.toLowerCase().includes(searchQuery.toLowerCase())
+    if (isSearchMode) {
+      // 검색 모드: 시간 범위만 적용 (지역은 API에서 이미 필터링됨)
+      const articleDate = new Date(article.pubDate)
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - timeRange)
+      const matchesTimeRange = articleDate >= cutoffDate
+
+      return matchesTimeRange
+    }
+
+    // 일반 모드: 기존 필터 적용
+    const matchesCategory = activeCategory === "all" || article.category === activeCategory
+    const matchesRegion = activeRegion === "all" || article.region === activeRegion
 
     const articleDate = new Date(article.pubDate)
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - timeRange)
     const matchesTimeRange = articleDate >= cutoffDate
 
-    const matchesRegion = activeRegion === "all" || article.region === activeRegion
-
-    return matchesCategory && matchesSearch && matchesTimeRange && matchesRegion
+    return matchesCategory && matchesTimeRange && matchesRegion
   })
 
   const handleToggleSelection = (articleId: string) => {
@@ -105,16 +116,18 @@ export function NewsFeed({
   }
 
   if (filteredArticles.length === 0) {
+    const isSearchMode = searchQuery.trim().length > 0
+
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>No articles found</AlertTitle>
         <AlertDescription>
-          {searchQuery
-            ? `No articles found matching "${searchQuery}"${activeCategory !== "all" ? ` in the ${activeCategory} category` : ""}${activeRegion !== "all" ? ` in ${activeRegion === "domestic" ? "국내" : "해외"} news` : ""}.`
+          {isSearchMode
+            ? `"${searchQuery}" 검색 결과가 없습니다. 국내/해외 뉴스를 모두 검색했습니다.`
             : activeCategory === "all"
-              ? "Check back later for the latest news updates."
-              : `No articles found in the ${activeCategory} category.`}
+              ? "최신 뉴스를 불러오는 중입니다. 잠시 후 다시 확인해주세요."
+              : `${activeCategory} 카테고리에 뉴스가 없습니다.`}
         </AlertDescription>
       </Alert>
     )
