@@ -5,18 +5,7 @@ import { NewsCard } from "@/components/news-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
-
-interface NewsArticle {
-  id: string
-  title: string
-  description: string
-  link: string
-  pubDate: string
-  source: string
-  imageUrl?: string
-  category?: string
-  region?: string // Added region field
-}
+import type { NewsArticle } from "@/types/article"
 
 interface NewsFeedProps {
   activeCategory: string
@@ -25,7 +14,7 @@ interface NewsFeedProps {
   refreshTrigger: number
   selectedArticles: string[]
   onSelectionChange: (selected: string[]) => void
-  activeRegion: string // Added region prop
+  activeRegion: string
 }
 
 export function NewsFeed({
@@ -35,7 +24,7 @@ export function NewsFeed({
   refreshTrigger,
   selectedArticles,
   onSelectionChange,
-  activeRegion, // Added region prop
+  activeRegion,
 }: NewsFeedProps) {
   const [articles, setArticles] = useState<NewsArticle[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,7 +48,7 @@ export function NewsFeed({
     }
 
     fetchNews()
-  }, [refreshTrigger]) // Refetch when refresh is triggered
+  }, [refreshTrigger])
 
   const filteredArticles = articles.filter((article) => {
     // Filter by category

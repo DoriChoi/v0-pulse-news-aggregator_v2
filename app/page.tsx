@@ -7,17 +7,26 @@ import { NewsCategories } from "@/components/news-categories"
 import { TimeRangeFilter } from "@/components/time-range-filter"
 import { BulkActions } from "@/components/bulk-actions"
 import { RegionFilter } from "@/components/region-filter"
+import { useNewsFilters } from "@/hooks/useNewsFilters"
 
 export default function HomePage() {
-  const [activeCategory, setActiveCategory] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [timeRange, setTimeRange] = useState(7)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const {
+    activeCategory,
+    activeRegion,
+    searchQuery,
+    timeRange,
+    refreshTrigger,
+    setActiveCategory,
+    setActiveRegion,
+    setSearchQuery,
+    setTimeRange,
+    refresh,
+  } = useNewsFilters()
+
   const [selectedArticles, setSelectedArticles] = useState<string[]>([])
-  const [activeRegion, setActiveRegion] = useState("all") // Added region state
 
   const handleRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1)
+    refresh()
     setSelectedArticles([])
   }
 
@@ -36,7 +45,7 @@ export default function HomePage() {
             refreshTrigger={refreshTrigger}
             selectedArticles={selectedArticles}
             onSelectionChange={setSelectedArticles}
-            activeRegion={activeRegion} // Pass region to NewsFeed
+            activeRegion={activeRegion}
           />
         </div>
       </main>
