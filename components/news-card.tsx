@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import { ExternalLink, Clock, Sparkles } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import Image from "next/image"
 import { useArticleSummary } from "@/hooks/useArticleSummary"
+import { getNewsLogo } from "@/lib/utils/news-logos"
 import type { NewsArticle } from "@/types/article"
 
 interface NewsCardProps {
@@ -19,9 +21,29 @@ interface NewsCardProps {
 export function NewsCard({ article, isSelected, onToggleSelection }: NewsCardProps) {
   const timeAgo = formatDistanceToNow(new Date(article.pubDate), { addSuffix: true })
   const { summary, isLoading, generateSummary } = useArticleSummary()
+  const [imageUrl, setImageUrl] = useState(article.imageUrl)
+  const [retryCount, setRetryCount] = useState(0)
 
   const handleSummarize = () => {
     generateSummary(article.title, article.description, article.link)
+  }
+
+  const handleImageError = () => {
+    // 첫 번째 실패: 한 번 더 시도
+    if (retryCount === 0) {
+      console.log(`[v0] Image load failed for ${article.source}, retrying...`)
+      setRetryCount(1)
+      // 이미지 URL에 timestamp를 추가하여 재시도
+      if (article.imageUrl) {
+        setImageUrl(`${article.imageUrl}?retry=1`)
+      }
+    }
+    // 두 번째 실패: 뉴스 소스 로고로 fallback
+    else {
+      console.log(`[v0] Image load failed again for ${article.source}, using source logo`)
+      const logoUrl = getNewsLogo(article.source)
+      setImageUrl(logoUrl)
+    }
   }
 
   return (
@@ -33,14 +55,15 @@ export function NewsCard({ article, isSelected, onToggleSelection }: NewsCardPro
           className="bg-background border-2"
         />
       </div>
-      {article.imageUrl && (
-        <div className="relative h-48 w-full overflow-hidden">
+      {imageUrl && (
+        <div className="relative h-48 w-full overflow-hidden bg-muted">
           <Image
-            src={article.imageUrl || "/placeholder.svg"}
+            src={imageUrl}
             alt={article.title}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            onError={handleImageError}
           />
         </div>
       )}

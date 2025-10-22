@@ -84,6 +84,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "**.imgur.com",
       },
+      {
+        protocol: "https",
+        hostname: "**.naver.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.reddit.com",
+      },
     ],
     unoptimized: true,
   },
