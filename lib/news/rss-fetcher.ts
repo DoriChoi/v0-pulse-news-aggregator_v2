@@ -2,6 +2,7 @@ import { XMLParser } from "fast-xml-parser"
 import type { NewsArticle, RSSFeed, RSSItem } from "@/types/article"
 import { categorizeArticle } from "./categorizer"
 import { fetchOGImage } from "./image-extractor"
+import { generateNewsId } from "@/lib/utils/hash"
 
 /**
  * RSS 피드에서 뉴스 기사 수집
@@ -78,11 +79,15 @@ async function convertRSSItemToArticle(
   // 카테고리 분류
   const category = categorizeArticle(item.title || "", item.description || "", item.category)
 
+  // 링크 URL을 기반으로 고유한 ID 생성
+  const articleLink = item.link || "#"
+  const articleId = generateNewsId(articleLink, "rss")
+
   return {
-    id: `${feed.source}-${index}-${Date.now()}`,
+    id: articleId,
     title: item.title || "No title",
     description: item.description || item.summary || "No description available",
-    link: item.link || "#",
+    link: articleLink,
     pubDate: item.pubDate || item.published || new Date().toISOString(),
     source: feed.source,
     imageUrl,

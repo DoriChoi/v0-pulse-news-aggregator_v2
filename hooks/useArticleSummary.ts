@@ -2,28 +2,25 @@ import { useState } from "react"
 
 /**
  * 기사 AI 요약 커스텀 훅
- * OpenAI API를 사용하여 기사 요약 생성
+ * 전문 크롤링 + OpenAI API + Supabase 저장/조회
  */
 export function useArticleSummary() {
   const [summary, setSummary] = useState<string | null>(null)
+  const [keyPoints, setKeyPoints] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fromCache, setFromCache] = useState(false)
 
   /**
-   * 기사 요약 생성
+   * 기사 요약 생성 (전문 크롤링 + DB 캐싱)
    */
-  const generateSummary = async (title: string, description: string, link: string) => {
-    // API 키 확인
+  const generateSummary = async (title: string, description: string, link: string, newsId: string) => {
+    // API 키 확인 (localStorage 또는 환경변수)
     const apiKey = localStorage.getItem("openai_api_key")
-
-    if (!apiKey) {
-      setSummary("OpenAI API 키를 먼저 설정해주세요. (우측 상단 설정 버튼)")
-      setError("API key not found")
-      return
-    }
 
     setIsLoading(true)
     setError(null)
+    setFromCache(false)
 
     try {
       const response = await fetch("/api/summarize", {
@@ -35,6 +32,7 @@ export function useArticleSummary() {
           title,
           description,
           link,
+          newsId,
           apiKey,
         }),
       })
@@ -45,6 +43,12 @@ export function useArticleSummary() {
 
       const data = await response.json()
       setSummary(data.summary)
+      setKeyPoints(data.keyPoints || [])
+      setFromCache(data.fromCache || false)
+
+      if (data.fromCache) {
+        console.log(`[v0] Summary loaded from cache (viewed ${data.viewCount} times)`)
+      }
     } catch (err) {
       console.error("[v0] Error summarizing article:", err)
       const errorMessage = "요약을 생성하는데 실패했습니다."
@@ -60,14 +64,18 @@ export function useArticleSummary() {
    */
   const resetSummary = () => {
     setSummary(null)
+    setKeyPoints([])
     setError(null)
     setIsLoading(false)
+    setFromCache(false)
   }
 
   return {
     summary,
+    keyPoints,
     isLoading,
     error,
+    fromCache,
     generateSummary,
     resetSummary,
   }

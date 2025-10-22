@@ -20,12 +20,12 @@ interface NewsCardProps {
 
 export function NewsCard({ article, isSelected, onToggleSelection }: NewsCardProps) {
   const timeAgo = formatDistanceToNow(new Date(article.pubDate), { addSuffix: true })
-  const { summary, isLoading, generateSummary } = useArticleSummary()
+  const { summary, keyPoints, isLoading, fromCache, generateSummary } = useArticleSummary()
   const [imageUrl, setImageUrl] = useState(article.imageUrl)
   const [retryCount, setRetryCount] = useState(0)
 
   const handleSummarize = () => {
-    generateSummary(article.title, article.description, article.link)
+    generateSummary(article.title, article.description, article.link, article.id)
   }
 
   const handleImageError = () => {
@@ -83,9 +83,24 @@ export function NewsCard({ article, isSelected, onToggleSelection }: NewsCardPro
           <div className="mt-4 p-3 bg-muted rounded-lg border">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold">AI 요약</span>
+              <span className="text-sm font-semibold">
+                AI 요약 {fromCache && <span className="text-xs text-muted-foreground">(캐시됨)</span>}
+              </span>
             </div>
-            <p className="text-sm text-foreground">{summary}</p>
+            <p className="text-sm text-foreground mb-2">{summary}</p>
+            {keyPoints && keyPoints.length > 0 && (
+              <div className="mt-3 pt-3 border-t">
+                <p className="text-xs font-semibold mb-2">핵심 포인트</p>
+                <ul className="space-y-1">
+                  {keyPoints.map((point, index) => (
+                    <li key={index} className="text-xs text-foreground flex items-start gap-2">
+                      <span className="text-primary">•</span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

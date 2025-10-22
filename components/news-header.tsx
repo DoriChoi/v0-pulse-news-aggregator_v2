@@ -4,7 +4,6 @@ import { Search, Menu, Radio, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { ApiKeySettings } from "@/components/api-key-settings"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
 interface NewsHeaderProps {
@@ -64,7 +63,6 @@ export function NewsHeader({ searchQuery, onSearchChange, onRefresh }: NewsHeade
           <Button variant="ghost" size="icon" onClick={onRefresh} title="Refresh news">
             <RefreshCw className="h-5 w-5" />
           </Button>
-          <ApiKeySettings />
           <ThemeToggle />
           <Sheet>
             <SheetTrigger asChild className="md:hidden">

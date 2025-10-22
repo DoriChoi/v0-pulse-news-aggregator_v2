@@ -1,6 +1,7 @@
 import type { NewsArticle } from "@/types/article"
 import { categorizeArticle } from "./categorizer"
 import { fetchOGImage } from "./image-extractor"
+import { generateNewsId } from "@/lib/utils/hash"
 
 /**
  * 네이버 뉴스 API 응답 인터페이스
@@ -66,9 +67,6 @@ export async function fetchNaverNews(query: string = "최신뉴스", display: nu
         // 카테고리 자동 분류
         const category = categorizeArticle(cleanTitle, cleanDescription)
 
-        // 링크 URL을 해시하여 고유 ID 생성
-        const linkHash = hashString(item.originallink || item.link)
-
         // 원본 링크에서 OG 이미지 추출 시도
         const articleLink = item.originallink || item.link
         let imageUrl: string | undefined
@@ -80,8 +78,11 @@ export async function fetchNaverNews(query: string = "최신뉴스", display: nu
           imageUrl = undefined
         }
 
+        // 링크 URL을 기반으로 고유한 ID 생성
+        const articleId = generateNewsId(articleLink, "naver")
+
         return {
-          id: `naver-${query}-${linkHash}-${index}`,
+          id: articleId,
           title: cleanTitle,
           description: cleanDescription,
           link: articleLink,
@@ -102,19 +103,6 @@ export async function fetchNaverNews(query: string = "최신뉴스", display: nu
     )
     return []
   }
-}
-
-/**
- * 문자열을 간단한 해시값으로 변환
- */
-function hashString(str: string): string {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(36)
 }
 
 /**
