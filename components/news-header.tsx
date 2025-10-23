@@ -37,7 +37,7 @@ export function NewsHeader({ searchQuery, onSearchChange, onRefresh }: NewsHeade
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Radio className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Pulse</h1>
+          <h1 className="text-2xl font-bold">TIMES</h1>
         </div>
 
         <div className="hidden md:flex flex-1 max-w-md mx-8">
